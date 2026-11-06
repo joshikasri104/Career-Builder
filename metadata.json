@@ -1,0 +1,6 @@
+{
+  "name": "EventEase – Smart Event Management System",
+  "description": "Modern event management platform for organizers to create, manage, and monitor events, and for attendees to discover and register seamlessly.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

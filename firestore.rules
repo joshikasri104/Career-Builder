@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'joshikasri104@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isValidEvent(data) {
+      return data.title is string && data.title.size() <= 150 &&
+             data.description is string && data.description.size() <= 5000 &&
+             data.category is string && data.category.size() <= 50 &&
+             data.date is string && data.date.size() <= 30 &&
+             data.time is string && data.time.size() <= 30 &&
+             data.venue is string && data.venue.size() <= 200 &&
+             data.location is string && data.location.size() <= 100 &&
+             data.organizerName is string && data.organizerName.size() <= 100 &&
+             data.maxParticipants is number && data.maxParticipants > 0 &&
+             (data.status == 'open' || data.status == 'closed' || data.status == 'cancelled');
+    }
+
+    function isValidRegistration(data) {
+      return data.eventId is string && data.eventId.size() <= 128 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.userEmail is string && data.userEmail.size() <= 150 &&
+             data.bookingReference is string && data.bookingReference.size() <= 60 &&
+             (data.status == 'confirmed' || data.status == 'cancelled');
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Events collection
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isAdmin() && isValidId(eventId) && isValidEvent(request.resource.data);
+      allow update: if (
+        (isSignedIn() && isAdmin() && isValidEvent(request.resource.data)) ||
+        (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentParticipants']))
+      );
+      allow delete: if isSignedIn() && isAdmin();
+    }
+
+    // Registrations collection
+    match /registrations/{registrationId} {
+      allow get: if isSignedIn() && isValidId(registrationId) && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(registrationId) && isValidRegistration(request.resource.data);
+      allow update: if isSignedIn() && (
+        (resource.data.userId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])) ||
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow get: if isSignedIn() && (userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && isAdmin();
+      allow create: if isSignedIn() && userId == request.auth.uid;
+      allow update: if isSignedIn() && (userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && isAdmin();
+    }
+
+    // Test collection for initial connectivity test
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

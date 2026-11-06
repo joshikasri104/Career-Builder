@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "Event": {
+      "title": "Event",
+      "description": "An event managed by organizers and administrators",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "imageUrl": { "type": "string", "maxLength": 1000 },
+        "category": { "type": "string", "maxLength": 50 },
+        "date": { "type": "string", "maxLength": 30 },
+        "time": { "type": "string", "maxLength": 30 },
+        "venue": { "type": "string", "maxLength": 200 },
+        "location": { "type": "string", "maxLength": 100 },
+        "organizerName": { "type": "string", "maxLength": 100 },
+        "organizerId": { "type": "string", "maxLength": 128 },
+        "organizerEmail": { "type": "string", "maxLength": 150 },
+        "maxParticipants": { "type": "number" },
+        "currentParticipants": { "type": "number" },
+        "status": { "type": "string", "enum": ["open", "closed", "cancelled"] },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["title", "description", "category", "date", "time", "venue", "location", "organizerName", "organizerId", "maxParticipants", "status"]
+    },
+    "Registration": {
+      "title": "Registration",
+      "description": "Participant booking and registration for an event",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string", "maxLength": 128 },
+        "eventTitle": { "type": "string", "maxLength": 150 },
+        "eventDate": { "type": "string", "maxLength": 30 },
+        "eventTime": { "type": "string", "maxLength": 30 },
+        "eventVenue": { "type": "string", "maxLength": 200 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 100 },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "userPhone": { "type": "string", "maxLength": 30 },
+        "ticketQuantity": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "bookingReference": { "type": "string", "maxLength": 60 },
+        "status": { "type": "string", "enum": ["confirmed", "cancelled"] },
+        "registeredAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["eventId", "userId", "userName", "userEmail", "status", "bookingReference"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with role designation",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 150 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["admin", "user"] },
+        "phone": { "type": "string", "maxLength": 30 },
+        "bio": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["email", "displayName", "role"]
+    }
+  },
+  "firestore": {
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Collection of events published by organizers"
+    },
+    "/registrations/{registrationId}": {
+      "schema": "Registration",
+      "description": "Collection of attendee event registrations"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Registered user accounts and profiles"
+    }
+  }
+}
